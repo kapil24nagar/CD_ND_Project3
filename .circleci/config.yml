@@ -212,80 +212,171 @@ jobs:
           when: on_fail
       # Here's where you will add some code to rollback on failure      
 
-#   configure-infrastructure:
-#     docker:
-#       # Docker image here that supports Ansible
-#     steps:
-#       # Checkout code from git
-#       # Add ssh keys with fingerprint
-#       # attach workspace
-#       - run:
-#           name: Install dependencies
-#           command: |
-#             # Your code here
-#             exit 1
-#       - run:
-#           name: Configure server
-#           command: |
-#             # Your code here
-#             exit 1
-#       # Here's where you will add some code to rollback on failure      
+  configure-infrastructure:
+    # docker:
+    #   - image: amazon/aws-cli
+    executor: python  
+    steps:
+      -  checkout
+      - add_ssh_keys:
+          fingerprints: ["c7:6f:80:5f:2d:2d:78:73:58:8a:3f:14:09:ec:ee:1a"]
+      - attach_workspace:
+          at: .
+      - run:
+          name: Install dependencies
+          working_directory: ./.circleci/ansible
+          command: |
+            apk add --update ansible
+            ansible --version
+      - run:
+          name: Configure server
+          working_directory: ./.circleci/ansible
+          command: |
+            pwd &&
+            ls -la
+            cat inventory.txt
+            ansible-playbook -i inventory.txt configure-server.yml
+      # - destroy-environment:
+      #     id: ${CIRCLE_WORKFLOW_ID:0:7}
+      #     when: on_fail
 
-#   run-migrations:
-#     docker:
-#       # Docker image here that supports NodeJS
-#     steps:
-#       # Checkout code from git
-#       - run:
-#           name: Run migrations
-#           command: |
-#             # Your code here
-#             exit 1
-#       - run:
-#           name: Send migration results to memstash
-#           command: |
-#             # Your code here
-#             exit 1
-#      # Here's where you will add some code to rollback on failure      
+  run-migrations:
+    executor: node
+    steps:
+      - checkout
+      - attach_workspace:
+          at: .
+      - run:
+          name: Install AWS CLI dependencies
+          working_directory: /tmp
+          command: |
+            sudo apt-get update && sudo apt-get install -yy less
+            curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+            unzip awscliv2.zip
+            sudo ./aws/install
+      - run:
+          name: Install NPM
+          working_directory: ./backend
+          command:  |
+                npm install
+      - run:
+          name: Run migrations
+          working_directory: ./backend
+          command:  |
+                export TYPEORM_HOST=ec2-3-94-197-78.compute-1.amazonaws.com
+                echo $TYPEORM_HOST
+                npm run migrations > migration_status.txt
+                cat migration_status.txt
+      - run:
+          name: Send migration results to memstash
+          working_directory: ./backend
+          command: |
+            if grep -q "has been executed successfully" migration_status.txt
+            then
+              echo "DB migration was successful, will update memstash..."
+              curl  https://kvdb.io/NqK6G9tq8Jq7kMdMXacYZd/DB_MIGRATION_${CIRCLE_WORKFLOW_ID:0:7} -d "success" -k
+            else
+              echo "DB migration failed, please verify setup! Probably the database already exists. Verify setup!"
+              curl  https://kvdb.io/NqK6G9tq8Jq7kMdMXacYZd/DB_MIGRATION_${CIRCLE_WORKFLOW_ID:0:7} -d "failure" -k
+            fi
+            echo "WorkflowID=${CIRCLE_WORKFLOW_ID:0:7}"
+      # - destroy-environment:
+      #     id: ${CIRCLE_WORKFLOW_ID:0:7}
+      #     when: on_fail
+      # - revert-migrations:
+      #     id: ${CIRCLE_WORKFLOW_ID:0:7}
+      #     when: on_success     
+     
 
-#   deploy-frontend:
-#     docker:
-#       # Docker image here that supports AWS CLI
-#     steps:
-#       # Checkout code from git
-#       - run:
-#           name: Install dependencies
-#           command: |
-#             # your code here
-#       - run:
-#           name: Get backend url
-#           command: |
-#             # your code here
-#             export API_URL="http://${BACKEND_IP}:3030"
-#             echo "${API_URL}"
-#       - run:
-#           name: Deploy frontend objects
-#           command: |
-#             # your code here
-#       # Here's where you will add some code to rollback on failure      
+  deploy-frontend:
+    executor: node
+    steps:
+      - checkout
+      - attach_workspace:
+          at: .
+      - run:
+          name: Install AWS CLI dependencies
+          working_directory: /tmp
+          command: |
+            sudo apt-get update && sudo apt-get install -yy less
+            curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+            unzip awscliv2.zip
+            sudo ./aws/install
+      - run:
+          name: Rebuild frontend with backend API Url
+          command: |
+            BACKEND_GET_IP=$(aws ec2 describe-instances \
+              --query 'Reservations[*].Instances[*].PublicDnsName' \
+              --filters "Name=tag:project,Values=udapeople-backend-${CIRCLE_WORKFLOW_ID:0:7}" \
+              --output text)
+            export API_URL="http://${BACKEND_GET_IP}:3030"
+            echo "${API_URL}"
+            echo API_URL=$API_URL >> "frontend/.env"
+            cd frontend
+            echo ENVIRONMENT=development  >> ".env" 
+            echo NODE_ENV=development >> ".env"
+            export ENVIRONMENT=development
+            export NODE_ENV=development
+            cat .env
+            npm i
+            npm run build   
+            cd dist
+            aws s3 sync . s3://udapeople-${CIRCLE_WORKFLOW_ID:0:7} --delete
+            echo "Done"
                     
-#   deploy-backend:
-#     docker:
-#       # Docker image here that supports Ansible
-#     steps:
-#       # Checkout code from git
-#       # Add ssh keys with fingerprint
-#       # attach workspace
-#       - run:
-#           name: Install dependencies
-#           command: |
-#             # your code here
-#       - run:
-#           name: Deploy backend
-#           command: |
-#             # your code here
-#       # Here's where you will add some code to rollback on failure  
-
+  deploy-backend:
+    executor: python
+    steps:
+      - checkout
+      - add_ssh_keys:
+          fingerprints: ["e4:47:c2:35:34:ae:45:70:01:03:94:e2:37:80:f6:9c"]
+      - attach_workspace:
+          at: .
+      - run:
+          name: Install dependencies
+          working_directory: /tmp
+          command: |
+            apk add --update curl nodejs npm ansible zip
+            pip install awscli
+      - run:
+          name: Build backend
+          command: |
+            cd backend
+            npm i
+            npm run build
+            mv node_modules dist
+            export TYPEORM_HOST=ec2-3-7-68-126.ap-south-1.compute.amazonaws.com
+            echo $TYPEORM_HOST
+            echo ENVIRONMENT=production >> "dist/.env"
+            echo NODE_ENV=production >> "dist/.env"
+            echo VERSION=1 >> "dist/.env"
+            echo TYPEORM_CONNECTION=postgres >> "dist/.env"
+            echo TYPEORM_MIGRATIONS_DIR=./src/migrations >> "dist/.env"
+            echo TYPEORM_ENTITIES=./modules/domain/**/*.entity.js >> "dist/.env"
+            echo TYPEORM_MIGRATIONS=./migrations/*.js >> "dist/.env"
+            echo TYPEORM_HOST=$TYPEORM_HOST >> "dist/.env"
+            echo TYPEORM_PORT=$TYPEORM_PORT >> "dist/.env"
+            echo TYPEORM_USERNAME=$TYPEORM_USERNAME >> "dist/.env"
+            echo TYPEORM_PASSWORD=$TYPEORM_PASSWORD >> "dist/.env"
+            echo TYPEORM_DATABASE=$TYPEORM_DATABASE >> "dist/.env"
+            echo NODE_PATH=/home/ubuntu/dist/node_modules >> "dist/.env"
+            tar -czvf artefacts.tar.gz ./dist
+            pwd
+            cd ..
+            pwd
+            cd .circleci/ansible
+            echo "Contents of the inventory.txt file is -----"
+            cat inventory.txt
+            ansible-playbook -i inventory.txt deploy-backend.yml
+# ===============
+            # zip -r dist.zip dist
+            # mkdir -p ../.circleci/ansible/roles/deploy/files/
+            # mv dist.zip ../.circleci/ansible/roles/deploy/files/
+            # pwd
+            # echo [web] > inventory.txt
+            # echo 3.110.158.23 >> inventory.txt
+            # ansible-playbook -i inventory.txt ../.circleci/ansible/deploy-backend.yml
+            # echo "Done"
 #   smoke-test:
 #     docker:
 #       # Lightweight Docker image 
@@ -362,14 +453,14 @@ workflows:
           filters:
             branches:
               only: [master]
-      # - configure-infrastructure:
-      #     requires: [deploy-infrastructure]
-      # - run-migrations:
-      #     requires: [configure-infrastructure]
-      # - deploy-frontend:
-      #     requires: [run-migrations]
-      # - deploy-backend:
-      #     requires: [run-migrations]
+      - configure-infrastructure:
+          requires: [deploy-infrastructure]
+      - run-migrations:
+          requires: [configure-infrastructure]
+      - deploy-frontend:
+          requires: [run-migrations]
+      - deploy-backend:
+          requires: [run-migrations]
       # - smoke-test:
       #     requires: [deploy-backend, deploy-frontend]
       # - cloudfront-update:
