@@ -64,7 +64,7 @@ jobs:
              # Your code here 
              cd backend
              npm install
-             npm install --save-dev webpack@5.74.0
+            #  npm install --save-dev webpack@5.74.0
              npm run build
             #  exit 1
       - save_cache:
@@ -145,11 +145,16 @@ jobs:
           working_directory: ./backend
           command:  |
                 npm install
+
       - run:
           name: Check Backend against security vulnerabilities
           working_directory: ./backend
           command:   |
                 npm audit fix --audit-level=critical --force
+                npm install --save-dev webpack@5.74.0
+                npm update mkdirp --depth 6
+                npm update path-parse --depth 3
+                npm update kind-of --depth 14
                 npm audit --audit-level=critical
 
 #   deploy-infrastructure:
