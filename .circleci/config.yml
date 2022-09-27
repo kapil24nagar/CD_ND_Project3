@@ -361,21 +361,21 @@ jobs:
             npm i
             npm run build
             mv node_modules dist
-            export TYPEORM_HOST=ec2-3-7-68-126.ap-south-1.compute.amazonaws.com
-            echo $TYPEORM_HOST
-            echo ENVIRONMENT=production >> "dist/.env"
-            echo NODE_ENV=production >> "dist/.env"
-            echo VERSION=1 >> "dist/.env"
-            echo TYPEORM_CONNECTION=postgres >> "dist/.env"
-            echo TYPEORM_MIGRATIONS_DIR=./src/migrations >> "dist/.env"
-            echo TYPEORM_ENTITIES=./modules/domain/**/*.entity.js >> "dist/.env"
-            echo TYPEORM_MIGRATIONS=./migrations/*.js >> "dist/.env"
-            echo TYPEORM_HOST=$TYPEORM_HOST >> "dist/.env"
-            echo TYPEORM_PORT=$TYPEORM_PORT >> "dist/.env"
-            echo TYPEORM_USERNAME=$TYPEORM_USERNAME >> "dist/.env"
-            echo TYPEORM_PASSWORD=$TYPEORM_PASSWORD >> "dist/.env"
-            echo TYPEORM_DATABASE=$TYPEORM_DATABASE >> "dist/.env"
-            echo NODE_PATH=/home/ubuntu/dist/node_modules >> "dist/.env"
+            # export TYPEORM_HOST=ec2-3-7-68-126.ap-south-1.compute.amazonaws.com
+            # echo $TYPEORM_HOST
+            # echo ENVIRONMENT=production >> "dist/.env"
+            # echo NODE_ENV=production >> "dist/.env"
+            # echo VERSION=1 >> "dist/.env"
+            # echo TYPEORM_CONNECTION=postgres >> "dist/.env"
+            # echo TYPEORM_MIGRATIONS_DIR=./src/migrations >> "dist/.env"
+            # echo TYPEORM_ENTITIES=./modules/domain/**/*.entity.js >> "dist/.env"
+            # echo TYPEORM_MIGRATIONS=./migrations/*.js >> "dist/.env"
+            # echo TYPEORM_HOST=$TYPEORM_HOST >> "dist/.env"
+            # echo TYPEORM_PORT=$TYPEORM_PORT >> "dist/.env"
+            # echo TYPEORM_USERNAME=$TYPEORM_USERNAME >> "dist/.env"
+            # echo TYPEORM_PASSWORD=$TYPEORM_PASSWORD >> "dist/.env"
+            # echo TYPEORM_DATABASE=$TYPEORM_DATABASE >> "dist/.env"
+            # echo NODE_PATH=/home/ubuntu/dist/node_modules >> "dist/.env"
             tar -czvf artefacts.tar.gz ./dist
             pwd
             cd ..
