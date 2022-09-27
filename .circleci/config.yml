@@ -349,7 +349,7 @@ jobs:
       - add_ssh_keys:
           fingerprints: ["e4:47:c2:35:34:ae:45:70:01:03:94:e2:37:80:f6:9c"]
       - attach_workspace:
-          at: .
+          at: ~/
       - run:
           name: Install dependencies
           working_directory: /tmp
@@ -360,24 +360,8 @@ jobs:
           name: Build backend
           command: |
             cd backend
-            npm i
+            npm install
             npm run build
-            mv node_modules dist
-            # export TYPEORM_HOST=ec2-3-7-68-126.ap-south-1.compute.amazonaws.com
-            echo $TYPEORM_HOST
-            echo ENVIRONMENT=production >> "dist/.env"
-            echo NODE_ENV=production >> "dist/.env"
-            echo VERSION=1 >> "dist/.env"
-            echo TYPEORM_CONNECTION=postgres >> "dist/.env"
-            echo TYPEORM_MIGRATIONS_DIR=./src/migrations >> "dist/.env"
-            echo TYPEORM_ENTITIES=./modules/domain/**/*.entity.js >> "dist/.env"
-            echo TYPEORM_MIGRATIONS=./migrations/*.js >> "dist/.env"
-            echo TYPEORM_HOST=$TYPEORM_HOST >> "dist/.env"
-            echo TYPEORM_PORT=$TYPEORM_PORT >> "dist/.env"
-            echo TYPEORM_USERNAME=$TYPEORM_USERNAME >> "dist/.env"
-            echo TYPEORM_PASSWORD=$TYPEORM_PASSWORD >> "dist/.env"
-            echo TYPEORM_DATABASE=$TYPEORM_DATABASE >> "dist/.env"
-            echo NODE_PATH=/home/ubuntu/dist/node_modules >> "dist/.env"
             tar -czvf artefacts.tar.gz ./dist
             pwd
             cd ..
@@ -386,15 +370,7 @@ jobs:
             echo "Contents of the inventory.txt file is -----"
             cat inventory.txt
             ansible-playbook -i inventory.txt deploy-backend.yml
-# ===============
-            # zip -r dist.zip dist
-            # mkdir -p ../.circleci/ansible/roles/deploy/files/
-            # mv dist.zip ../.circleci/ansible/roles/deploy/files/
-            # pwd
-            # echo [web] > inventory.txt
-            # echo 3.110.158.23 >> inventory.txt
-            # ansible-playbook -i inventory.txt ../.circleci/ansible/deploy-backend.yml
-            # echo "Done"
+
   smoke-test:
     docker:
       - image: python:3.7-alpine3.11
