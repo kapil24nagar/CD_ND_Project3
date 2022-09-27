@@ -256,33 +256,51 @@ jobs:
             ansible-playbook -i inventory.txt configure-server.yml
      
 
+  # run-migrations:
+  #   executor: node
+  #   steps:
+  #     - checkout
+  #     - attach_workspace:
+  #         at: .
+  #     - run:
+  #         name: Install AWS CLI dependencies
+  #         working_directory: /tmp
+  #         command: |
+  #           sudo apt-get update && sudo apt-get install -yy less
+  #           curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+  #           unzip awscliv2.zip
+  #           sudo ./aws/install
+  #     - run:
+  #         name: Install NPM
+  #         working_directory: ./backend
+  #         command:  |
+  #               npm install
+  #     - run:
+  #         name: Run migrations
+  #         working_directory: ./backend
+  #         command:  |
+  #               export TYPEORM_HOST=ec2-3-94-197-78.compute-1.amazonaws.com
+  #               echo $TYPEORM_HOST
+  #               npm run migrations > migration_status.txt
+  #               cat migration_status.txt
   run-migrations:
-    executor: node
+    docker:
+     - image: cimg/base:stable
     steps:
-      - checkout
+      - checkout 
+      - install-awscli
+      - install-ansible
+      - install-nodejs
       - attach_workspace:
-          at: .
-      - run:
-          name: Install AWS CLI dependencies
-          working_directory: /tmp
-          command: |
-            sudo apt-get update && sudo apt-get install -yy less
-            curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
-            unzip awscliv2.zip
-            sudo ./aws/install
-      - run:
-          name: Install NPM
-          working_directory: ./backend
-          command:  |
-                npm install
+         at: ~/
       - run:
           name: Run migrations
-          working_directory: ./backend
-          command:  |
-                export TYPEORM_HOST=ec2-3-94-197-78.compute-1.amazonaws.com
-                echo $TYPEORM_HOST
-                npm run migrations > migration_status.txt
-                cat migration_status.txt
+          command: |
+            cd backend
+            npm install 
+            npm run migrations >> migrations_dump.txt
+            echo "migration successfully"
+            echo $(cat migrations_dump.txt)
       - run:
           name: Send migration results to memstash
           working_directory: ./backend
