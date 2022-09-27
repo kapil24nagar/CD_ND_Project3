@@ -298,9 +298,9 @@ jobs:
               curl  https://kvdb.io/LiSroTFUWTHpJf4YLDNu6R/DB_MIGRATION_${CIRCLE_WORKFLOW_ID:0:7} -d "failure" -k
             fi
             echo "WorkflowID=${CIRCLE_WORKFLOW_ID:0:7}"
-      # - destroy-environment:
-      #     id: ${CIRCLE_WORKFLOW_ID:0:7}
-      #     when: on_fail
+      - destroy-environment:
+          id: ${CIRCLE_WORKFLOW_ID:0:7}
+          when: on_fail
       # - revert-migrations:
       #     id: ${CIRCLE_WORKFLOW_ID:0:7}
       #     when: on_success     
@@ -451,12 +451,12 @@ jobs:
               --stack-name InitialStack \
               --parameter-overrides WorkflowID="${CIRCLE_WORKFLOW_ID:0:7}" \
               --tags project=udapeople
-     - destroy-environment:
-         id: ${CIRCLE_WORKFLOW_ID:0:7}
-         when: on_fail
-     - revert-migrations:
-         id: ${CIRCLE_WORKFLOW_ID:0:7}
-         when: on_fail
+    #  - destroy-environment:
+    #      id: ${CIRCLE_WORKFLOW_ID:0:7}
+    #      when: on_fail
+    #  - revert-migrations:
+    #      id: ${CIRCLE_WORKFLOW_ID:0:7}
+    #      when: on_fail
 
   cleanup:
     executor: aws
