@@ -11,6 +11,7 @@ executors:
     docker:
       - image: amazon/aws-cli
 
+
 commands:
   destroy-environment:
     description: Destroy back-end and front-end cloudformation stacks given a workflow ID.
@@ -36,24 +37,31 @@ commands:
               TERM: xterm-256color
           when: << parameters.when >>
 
+
   revert-migrations:
-    description: Revert the last migration if successfully run in the current workflow.
+    description: Revert the last migration if it didnt successfully run in the current workflow.
     parameters:
-      # Add parameter here     
+      when:
+        type: string
+      id:
+        type: string
     steps:
       - run:
           name: Revert migrations
-          # Add when this will run
+          working_directory: ./backend
           command: |
-            # Curl command here to see if there was a successful migration associated with the workflow id, store result in SUCCESS variable
-            SUCCESS = 1
-            if(( $SUCCESS==1 )); 
+            FAILURE=$(curl -k --request GET https://kvdb.io/LiSroTFUWTHpJf4YLDNu6R/DB_MIGRATION_<< parameters.id >>)
+            echo $FAILURE
+            if [[ "$FAILURE" == "failure" ]]
             then
-            #  cd ~/project/backend
-            #  npm install
-            #  Add revert code here. You can find this in the Getting Started section.
-              exit 1
+              pwd
+              ls -la
+              export TYPEORM_HOST=ec2-3-7-68-126.ap-south-1.compute.amazonaws.com
+              echo $TYPEORM_HOST
+              npm run migrations:revert
             fi
+          when: << parameters.when >>
+
 orbs:
   slack: circleci/slack@3.4.2  # for slack integration to https://udapeople.slack.com; reference: https://circleci.com/blog/continuous-integration-slack-twilio/
 
@@ -195,7 +203,10 @@ jobs:
       - run:
           name: Ensure back-end infrastructure exists
           working_directory: ./.circleci/files
-          command: aws cloudformation deploy --template-file backend.yml --tags project=udapeople-backend-${CIRCLE_WORKFLOW_ID:0:7} --stack-name "udapeople-backend-${CIRCLE_WORKFLOW_ID:0:7}" --parameter-overrides ID="${CIRCLE_WORKFLOW_ID:0:7}" 
+          command: aws cloudformation deploy --template-file backend.yml \
+                --tags project=udapeople-backend-${CIRCLE_WORKFLOW_ID:0:7} \
+                --stack-name "udapeople-backend-${CIRCLE_WORKFLOW_ID:0:7}" \
+                --parameter-overrides ID="${CIRCLE_WORKFLOW_ID:0:7}" 
       - run:
           name: Ensure front-end infrastructure exist
           working_directory: ./.circleci/files
@@ -224,8 +235,6 @@ jobs:
       # Here's where you will add some code to rollback on failure      
 
   configure-infrastructure:
-    # docker:
-    #   - image: amazon/aws-cli
     executor: python  
     steps:
       -  checkout
@@ -247,9 +256,7 @@ jobs:
             ls -la
             cat inventory.txt
             ansible-playbook -i inventory.txt configure-server.yml
-      # - destroy-environment:
-      #     id: ${CIRCLE_WORKFLOW_ID:0:7}
-      #     when: on_fail
+     
 
   run-migrations:
     executor: node
@@ -274,8 +281,8 @@ jobs:
           name: Run migrations
           working_directory: ./backend
           command:  |
-                export TYPEORM_HOST=ec2-3-94-197-78.compute-1.amazonaws.com
-                echo $TYPEORM_HOST
+                # export TYPEORM_HOST=ec2-3-94-197-78.compute-1.amazonaws.com
+                # echo $TYPEORM_HOST
                 npm run migrations > migration_status.txt
                 cat migration_status.txt
       - run:
@@ -285,10 +292,10 @@ jobs:
             if grep -q "has been executed successfully" migration_status.txt
             then
               echo "DB migration was successful, will update memstash..."
-              curl  https://kvdb.io/NqK6G9tq8Jq7kMdMXacYZd/DB_MIGRATION_${CIRCLE_WORKFLOW_ID:0:7} -d "success" -k
+              curl  https://kvdb.io/LiSroTFUWTHpJf4YLDNu6R/DB_MIGRATION_${CIRCLE_WORKFLOW_ID:0:7} -d "success" -k
             else
               echo "DB migration failed, please verify setup! Probably the database already exists. Verify setup!"
-              curl  https://kvdb.io/NqK6G9tq8Jq7kMdMXacYZd/DB_MIGRATION_${CIRCLE_WORKFLOW_ID:0:7} -d "failure" -k
+              curl  https://kvdb.io/LiSroTFUWTHpJf4YLDNu6R/DB_MIGRATION_${CIRCLE_WORKFLOW_ID:0:7} -d "failure" -k
             fi
             echo "WorkflowID=${CIRCLE_WORKFLOW_ID:0:7}"
       # - destroy-environment:
@@ -468,10 +475,10 @@ workflows:
           requires: [deploy-infrastructure]
       - run-migrations:
           requires: [configure-infrastructure]
-      - deploy-frontend:
-          requires: [run-migrations]
-      - deploy-backend:
-          requires: [run-migrations]
+      # - deploy-frontend:
+      #     requires: [run-migrations]
+      # - deploy-backend:
+      #     requires: [run-migrations]
       # - smoke-test:
       #     requires: [deploy-backend, deploy-frontend]
       # - cloudfront-update:
