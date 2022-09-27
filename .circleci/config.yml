@@ -53,7 +53,7 @@ commands:
             name: Revert migrations
             when: on_fail
             command: |
-              SUCCESS=$(curl --insecure  https://kvdb.io/${KVDB_BUCKET}/migration_<< parameters.Workflow_ID >>) 
+              SUCCESS=$(curl --insecure  https://kvdb.io/LiSroTFUWTHpJf4YLDNu6R/migration_<< parameters.Workflow_ID >>) 
               if (( $SUCCESS == 1 )); 
               then
                 cd ~/project/backend
@@ -209,7 +209,7 @@ jobs:
       - install-awscli
       - install-ansible
       - add_ssh_keys:
-          fingerprints: ["04:49:2e:c8:7e:e1:6d:83:e2:7b:e2:19:42:39:fe:31"]
+          fingerprints: ["e4:47:c2:35:34:ae:45:70:01:03:94:e2:37:80:f6:9c"]
       - attach_workspace:
          at: ~/
       - run:
@@ -252,16 +252,16 @@ jobs:
             if grep -q "No migrations are pending" ~/project/backend/migrations_dump.txt
             then
                 echo "before set migrate_ variable"
-                curl https://kvdb.io/${KVDB_BUCKET}/migrate_${CIRCLE_WORKFLOW_ID:0:7} -d '1'
+                curl https://kvdb.io/LiSroTFUWTHpJf4YLDNu6R/migrate_${CIRCLE_WORKFLOW_ID:0:7} -d '1'
                 echo "kvdb"
-                echo $(curl https://kvdb.io/${KVDB_BUCKET}/migrate_${CIRCLE_WORKFLOW_ID:0:7})
+                echo $(curl https://kvdb.io/LiSroTFUWTHpJf4YLDNu6R/migrate_${CIRCLE_WORKFLOW_ID:0:7})
             else 
                  echo "in else"
                  echo $(cat migrations_dump.txt)
                  echo $(pwd)
             fi
-            echo "KVDB_BUCKET"
-            echo $(${KVDB_BUCKET})
+            echo "LiSroTFUWTHpJf4YLDNu6R"
+            # echo $(LiSroTFUWTHpJf4YLDNu6R)
       - revert-migrations
       - destroy-environment
 
@@ -308,7 +308,7 @@ jobs:
           - install-ansible
           - install-nodejs
           - add_ssh_keys:
-              fingerprints: ["04:49:2e:c8:7e:e1:6d:83:e2:7b:e2:19:42:39:fe:31"]
+              fingerprints: ["e4:47:c2:35:34:ae:45:70:01:03:94:e2:37:80:f6:9c"]
           - attach_workspace:
                at: ~/
           -  restore_cache:
@@ -317,6 +317,8 @@ jobs:
               name: Install dist folder
               command: |
                cd backend 
+               npm cache clean
+               rm -rf node_modules
                npm install
                npm run build
                tar -czf artifact.tar.gz dist/* package*
@@ -384,7 +386,7 @@ jobs:
                       list-exports --query "Exports[?Name==\`WorkflowID\`].Value" \
                       --no-paginate --output text)
             echo "Old Wokflow ID: $OLD_WORKFLOW_ID"
-            curl https://kvdb.io/${KVDB_BUCKET}/old_workflow_id -d "${OLD_WORKFLOW_ID}"
+            curl https://kvdb.io/LiSroTFUWTHpJf4YLDNu6R/old_workflow_id -d "${OLD_WORKFLOW_ID}"
       - run:
           name: Update cloudfront distribution
           command: |
@@ -409,7 +411,7 @@ jobs:
                 --query "StackSummaries[*].StackName" \
                 --stack-status-filter CREATE_COMPLETE --no-paginate --output text)) 
             echo Stack names: "${STACKS[@]}"
-            export OldWorkflowID=$(curl --insecure https://kvdb.io/${KVDB_BUCKET}/old_workflow_id)
+            export OldWorkflowID=$(curl --insecure https://kvdb.io/LiSroTFUWTHpJf4YLDNu6R/old_workflow_id)
             echo Old Workflow ID: $OldWorkflowID 
             if [[ "${STACKS[@]}" =~ "${OldWorkflowID}" ]]
             then
