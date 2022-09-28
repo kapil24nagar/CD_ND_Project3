@@ -370,7 +370,7 @@ jobs:
             cd backend
             npm i
             npm run build
-            cp package* ./dist
+            cp package* dist
             mv node_modules dist
             cd ..
             tar -czvf artefacts.tar.gz ./dist
