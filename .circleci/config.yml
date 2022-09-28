@@ -349,7 +349,7 @@ jobs:
       - add_ssh_keys:
           fingerprints: ["e4:47:c2:35:34:ae:45:70:01:03:94:e2:37:80:f6:9c"]
       - attach_workspace:
-          at: ~/
+          at: .
       - run:
           name: Install dependencies
           working_directory: /tmp
@@ -360,7 +360,7 @@ jobs:
           name: Build backend
           command: |
             cd backend
-            npm install
+            npm i
             npm run build
             tar -czvf artefacts.tar.gz ./dist
             pwd
