@@ -373,8 +373,10 @@ jobs:
             cp package* ./dist
             mv node_modules dist
             cd ..
-            # tar -czvf artefacts.tar.gz ./dist
-            tar -C backend -czvf artifact.tar.gz .
+            tar -czvf artefacts.tar.gz ./dist
+            # tar -C backend -czvf artifact.tar.gz .
+            pwd
+            cd ..
             pwd
             cd .circleci/ansible
             echo "Contents of the inventory.txt file is -----"
