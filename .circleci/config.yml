@@ -284,9 +284,9 @@ jobs:
           name: Run migrations
           working_directory: ./backend
           command:  |
-                udapeople-dbidentifier.cqrxmp8tnx3e.us-east-1.rds.amazonaws.com
+                export TYPEORM_HOST=udapeople-dbidentifier.cqrxmp8tnx3e.us-east-1.rds.amazonaws.com
                 echo $TYPEORM_HOST
-                npm run migrations:revert
+                # npm run migrations:revert
                 npm run migrations > migration_status.txt
                 cat migration_status.txt
  
@@ -308,7 +308,7 @@ jobs:
           when: on_fail
       # - revert-migrations:
       #     id: ${CIRCLE_WORKFLOW_ID:0:7}
-      #     when: on_success     
+      #     when: on_success    
      
 
   deploy-frontend:
