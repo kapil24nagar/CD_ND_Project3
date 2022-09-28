@@ -175,12 +175,14 @@ jobs:
           name: Install dependencies
           working_directory: ./backend
           command:  |
+                npm cache clean --force
+                npm cache clear --force
                 npm install
 
       - run:
           name: Check Backend against security vulnerabilities
           working_directory: ./backend
-          command:   |
+          command:  |
                 npm install --save-dev webpack@5.74.0
                 npm update mkdirp --depth 6
                 npm update path-parse --depth 3
