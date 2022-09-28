@@ -492,7 +492,7 @@ jobs:
             echo CircleCI: "${CIRCLE_WORKFLOW_ID:0:7}"
             if [[ "${CIRCLE_WORKFLOW_ID:0:7}" == "${OldWorkflowID}" ]] || [[ "${OldWorkflowIDLen}" == 0 ]]
             then 
-              echo"Cannothing to  cleanup"
+              echo "Cannothing to  cleanup"
             else
               echo "Delete confirmed"
               aws s3 rm "s3://udapeople-${OldWorkflowID}" --recursive
