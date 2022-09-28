@@ -438,10 +438,13 @@ jobs:
             return 1
             fi
             
+      - revert-migrations:
+          id: ${CIRCLE_WORKFLOW_ID:0:7}
+          when: on_fail
 
-      # - destroy-environment:
-      #     id: ${CIRCLE_WORKFLOW_ID:0:7}
-      #     when: on_fail
+      - destroy-environment:
+          id: ${CIRCLE_WORKFLOW_ID:0:7}
+          when: on_fail
 
   cloudfront-update:
     executor: aws
@@ -462,12 +465,12 @@ jobs:
               --stack-name InitialStack \
               --parameter-overrides WorkflowID="${CIRCLE_WORKFLOW_ID:0:7}" \
               --tags project=udapeople
-    #  - destroy-environment:
-    #      id: ${CIRCLE_WORKFLOW_ID:0:7}
-    #      when: on_fail
-    #  - revert-migrations:
-    #      id: ${CIRCLE_WORKFLOW_ID:0:7}
-    #      when: on_fail
+     - destroy-environment:
+         id: ${CIRCLE_WORKFLOW_ID:0:7}
+         when: on_fail
+     - revert-migrations:
+         id: ${CIRCLE_WORKFLOW_ID:0:7}
+         when: on_fail
 
   cleanup:
     executor: aws
@@ -498,18 +501,18 @@ jobs:
 workflows:
   default:
     jobs:
-      # - build-frontend
-      # - build-backend
-      # - test-frontend:
-      #     requires: [build-frontend]
-      # - test-backend:
-      #     requires: [build-backend]
-      # - scan-backend:
-      #     requires: [build-backend]
-      # - scan-frontend:
-      #     requires: [build-frontend]
+      - build-frontend
+      - build-backend
+      - test-frontend:
+          requires: [build-frontend]
+      - test-backend:
+          requires: [build-backend]
+      - scan-backend:
+          requires: [build-backend]
+      - scan-frontend:
+          requires: [build-frontend]
       - deploy-infrastructure:
-          # requires: [test-frontend, test-backend, scan-frontend, scan-backend]
+          requires: [test-frontend, test-backend, scan-frontend, scan-backend]
           filters:
             branches:
               only: [master]
@@ -525,5 +528,5 @@ workflows:
           requires: [deploy-backend, deploy-frontend]
       - cloudfront-update:
           requires: [smoke-test]
-      # - cleanup:
-      #     requires: [cloudfront-update]curl
+      - cleanup:
+          requires: [cloudfront-update]curl
