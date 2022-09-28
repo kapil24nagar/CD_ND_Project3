@@ -17,7 +17,7 @@
   - name: "install nodejs and npm"
     become: yes
     apt:
-      name: ["nodejs", "npm"]
+      name: ["nodejs", "npm", "ansible"]
       state: latest
       update_cache: yes
 

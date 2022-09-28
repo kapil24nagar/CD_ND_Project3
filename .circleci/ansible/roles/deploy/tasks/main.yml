@@ -73,9 +73,10 @@
         cd /home/ubuntu/dist
         pm2 list
         pm2 stop default
-        pm2 start main.js
+        pm2 start main.js --update-env
         pm2 status all
         netstat -tulpn
         curl localhost:3030/api/status
         netstat -tulpn
+        
     ignore_errors: true
