@@ -1,31 +1,58 @@
 ---
-- name: "Creates backend app directory"
+# - name: "Creates backend app directory"
+#   file:
+#     path: ~/backend-app
+#     state: directory
+
+# - name: "Unarchive backend files"
+#   unarchive:
+#     src: artifact.tar.gz
+#     dest: ~/backend-app
+
+# - name: "Installing Node Dependencies"
+#   shell: |
+#     cd ~/backend-app
+#     npm i
+# - name: "Executing Node app with PM2"
+#   shell: |
+#     cd ~/backend-app/dist
+#     pm2 stop default
+#     pm2 start main.js
+#   register: execute_node
+
+# - name: print message
+#   debug:
+#     msg: "{{ execute_node.stdout_lines }}"
+
+# - name: "Configure pm2 to start as service"
+#   become: true
+#   shell: |
+#     sudo su -c "env PATH=$PATH:/usr/local/bin pm2 startup systemd -u ubuntu --hp /home/ubuntu"
+#     pm2 save
+
+- name: create backend directory
+  become: yes
   file:
-    path: ~/backend-app
+    path: ~/backend
     state: directory
-
-- name: "Unarchive backend files"
-  unarchive:
-    src: artifact.tar.gz
-    dest: ~/backend-app
-
-- name: "Installing Node Dependencies"
+    mode: 0755
+- name: copy backend files
+  become: yes
+  copy:
+    src: ~/project/artifact.tar.gz
+    dest: ~/backend/artifact.tar.gz
+- name: unpack backend files
+  become: yes
   shell: |
-    cd ~/backend-app
-    npm i
-- name: "Executing Node app with PM2"
+    cd ~/backend
+    tar -vxf artifact.tar.gz
+    rm -f artifact.tar.gz
+- name: start app 
+  become: yes
   shell: |
-    cd ~/backend-app/dist
+    cd ~/backend
+    npm install
     pm2 stop default
-    pm2 start main.js
-  register: execute_node
-
-- name: print message
-  debug:
-    msg: "{{ execute_node.stdout_lines }}"
-
-- name: "Configure pm2 to start as service"
-  become: true
-  shell: |
-    sudo su -c "env PATH=$PATH:/usr/local/bin pm2 startup systemd -u ubuntu --hp /home/ubuntu"
-    pm2 save
+    pm2 start npm -- start
+    cd dist
+    pm2 start main.js --update-env
