@@ -58,6 +58,7 @@ commands:
               ls -la
               export TYPEORM_HOST=udapeople-dbidentifier.cqrxmp8tnx3e.us-east-1.rds.amazonaws.com
               echo $TYPEORM_HOST
+              npm install
               npm run migrations:revert
             fi
           when: << parameters.when >>
