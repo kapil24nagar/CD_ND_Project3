@@ -417,7 +417,7 @@ jobs:
           command: |
             if curl -s http://udapeople-${CIRCLE_WORKFLOW_ID:0:7}.s3-website.us-east-1.amazonaws.com/#/employees | grep "Welcome"
             then
-            return 0
+            return 1
             else
             return 1
             fi
@@ -490,9 +490,15 @@ jobs:
             echo OldWorkflowIDLen: "${OldWorkflowIDLen}"
             echo $OldWorkflowID
             echo CircleCI: "${CIRCLE_WORKFLOW_ID:0:7}"
+<<<<<<< HEAD
             if [[ "${CIRCLE_WORKFLOW_ID:0:7}" == "${OldWorkflowID}" ]] || [[ "${OldWorkflowIDLen}" > 0 ]]
             then 
               echo"Nothing to cleanup"
+=======
+            if [[ "${CIRCLE_WORKFLOW_ID:0:7}" == "${OldWorkflowID}" ]] || [[ "${OldWorkflowIDLen}" == 0 ]]
+            then 
+              echo "Cannothing to  cleanup"
+>>>>>>> 70b0ff4e7cfe5208aaf4b738e0cd6b57b4625216
             else
               echo "Delete confirmed"
               aws s3 rm "s3://udapeople-${OldWorkflowID}" --recursive
