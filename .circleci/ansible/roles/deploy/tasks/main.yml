@@ -1,126 +1,82 @@
 ---
-- name: Create app dir
-  become: yes
-  file:
-    path: /home/ubuntu/app
-    state: directory
-
-- name: "Copy backend build folder to EC2"
-  become: yes
-  unarchive:
-    src: /tmp/workspace/backend.tar.gz
-    dest: /home/ubuntu/app/
-    owner: ubuntu
-
-- name: "Copy package.json to EC2"
-  become: yes
-  copy:
-    src: /tmp/workspace/package.json
-    dest: /home/ubuntu/app/
-    owner: ubuntu
-
-- name: "NPM Install"
-  shell:
-    cmd: npm install --production
-    chdir: /home/ubuntu/app
-
-- name: "Start backend with pm2"
-  become: yes
-  shell: |
-    cd /home/ubuntu/app
-    pm2 start main.js --name app
-  environment:
-    ENVIRONMENT: production
-    TYPEORM_CONNECTION: "{{ lookup('env', 'TYPEORM_CONNECTION') }}"
-    TYPEORM_MIGRATIONS_DIR: "./migrations"
-    TYPEORM_MIGRATIONS: "./migrations/*.js"
-    TYPEORM_ENTITIES: "./modules/domain/**/*.entity.js"
-    TYPEORM_HOST: "{{ lookup('env', 'TYPEORM_HOST') }}"
-    TYPEORM_PORT: "{{ lookup('env', 'TYPEORM_PORT') }}"
-    TYPEORM_USERNAME: "{{ lookup('env', 'TYPEORM_USERNAME') }}"
-    TYPEORM_PASSWORD: "{{ lookup('env', 'TYPEORM_PASSWORD') }}"
-    TYPEORM_DATABASE: "{{ lookup('env', 'TYPEORM_DATABASE') }}"
-# 
-# 
-# 
-#   # - name: "copy distribution zip"
-#   #   become: true
-#   #   copy:
-#   #     src: dist.zip
-#   #     dest: dist.zip
+  # - name: "copy distribution zip"
+  #   become: true
+  #   copy:
+  #     src: dist.zip
+  #     dest: dist.zip
   
-#   - name: Extract artifact.tar.gz file to EC2 isntance
-#     unarchive:
-#       src: ../../backend/artefacts.tar.gz
-#       dest: /home/ubuntu
-#       owner: ubuntu
-#       remote_src: no
+  - name: Extract artifact.tar.gz file to EC2 isntance
+    unarchive:
+      src: ../../backend/artefacts.tar.gz
+      dest: /home/ubuntu
+      owner: ubuntu
+      remote_src: no
 
-#   # - name: "Install zip"
-#   #   become: yes
-#   #   apt:
-#   #     update_cache: yes
-#   #     name: zip
-#   #     state: present
+  # - name: "Install zip"
+  #   become: yes
+  #   apt:
+  #     update_cache: yes
+  #     name: zip
+  #     state: present
   
-#   # - name: unarchive the dist.zip
-#   #   ansible.builtin.unarchive:
-#   #     src:  dist.zip
-#   #     dest: /home/ubuntu/
-#   #     owner: ubuntu 
-#   #     remote_src: no
+  # - name: unarchive the dist.zip
+  #   ansible.builtin.unarchive:
+  #     src:  dist.zip
+  #     dest: /home/ubuntu/
+  #     owner: ubuntu 
+  #     remote_src: no
   
-#   - name: "install dependencies Nodejs NPM"
-#     become: yes
-#     apt:
-#       name: ["nodejs", "npm"]
-#       state: present
-#       update_cache: yes    
+  - name: "install dependencies Nodejs NPM"
+    become: yes
+    apt:
+      name: ["nodejs", "npm"]
+      state: present
+      update_cache: yes    
 
-#   # ADDED NEW
-#   - name: Install netstart tool - to check currently open ports
-#     become: yes
-#     apt:
-#       name: ["net-tools"]
-#       state: latest
-#       update_cache: yes
+  # ADDED NEW
+  - name: Install netstart tool - to check currently open ports
+    become: yes
+    apt:
+      name: ["net-tools"]
+      state: latest
+      update_cache: yes
       
-#   - name: "update apt packages."
-#     become: yes
-#     become_method: sudo
-#     apt:
-#       update_cache: yes
+  - name: "update apt packages."
+    become: yes
+    become_method: sudo
+    apt:
+      update_cache: yes
  
-#   - name: "pm2 install global using NPM"
-#     become: yes
-#     shell: |
-#       cd /home/ubuntu/
-#       npm install pm2 -g
+  - name: "pm2 install global using NPM"
+    become: yes
+    shell: |
+      cd /home/ubuntu/
+      npm install pm2 -g
 
-# # lins removed
-#       # export ENVIRONMENT=production
-#       # export NODE_ENV=production
-#       # export TYPEORM_CONNECTION=postgres
-#       # export TYPEORM_ENTITIES=./modules/domain/**/*.entity.js
-#       # export TYPEORM_HOST=ec2-13-233-68-53.ap-south-1.compute.amazonaws.com
-#       # export TYPEORM_PORT=5432
-#       # export TYPEORM_USERNAME=glee
-#       # export TYPEORM_PASSWORD=glee
-#       # export TYPEORM_DATABASE=glee
-#       # cd dist
-#       # pm2 start main.js
+# lins removed
+      # export ENVIRONMENT=production
+      # export NODE_ENV=production
+      # export TYPEORM_CONNECTION=postgres
+      # export TYPEORM_ENTITIES=./modules/domain/**/*.entity.js
+      # export TYPEORM_HOST=ec2-13-233-68-53.ap-south-1.compute.amazonaws.com
+      # export TYPEORM_PORT=5432
+      # export TYPEORM_USERNAME=glee
+      # export TYPEORM_PASSWORD=glee
+      # export TYPEORM_DATABASE=glee
+      # cd dist
+      # pm2 start main.js
 
-#   - name: "Start Backend App"
-#     become: yes
-#     become_user: ubuntu  
-#     shell: |
-#         cd /home/ubuntu/dist
-#         pm2 list
-#         pm2 stop default
-#         pm2 start main.js --update-env
-#         pm2 status all
-#         netstat -tulpn
-#         curl localhost:3030/api/status
-#         netstat -tulpn
+  - name: "Start Backend App"
+    become: yes
+    become_user: ubuntu  
+    shell: |
+        cd /home/ubuntu/dist
+        pm2 list
+        pm2 stop default
+        pm2 start main.js --update-env
+        pm2 status all
+        netstat -tulpn
+        curl localhost:3030/api/status
+        netstat -tulpn
         
-#     ignore_errors: true
+    ignore_errors: true
