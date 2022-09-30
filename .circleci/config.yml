@@ -236,25 +236,44 @@ jobs:
   configure-infrastructure:
     executor: python  
     steps:
-      -  checkout
+      - checkout
       - add_ssh_keys:
           fingerprints: ["e4:47:c2:35:34:ae:45:70:01:03:94:e2:37:80:f6:9c"]
       - attach_workspace:
-          at: .
+          at: ~/
       - run:
           name: Install dependencies
-          working_directory: ./.circleci/ansible
+          # working_directory: ./.circleci/ansible
           command: |
-            apk add --update ansible
-            ansible --version
+            apk add --update ansible openssh-client tar gzip curl nodejs npm
+            pip install awscli
+            cat .circleci/ansible/inventory.txt
       - run:
           name: Configure server
-          working_directory: ./.circleci/ansible
+          # working_directory: ./.circleci/ansible
+          # command: |
+          #   pwd &&
+          #   ls -la
+          #   cat inventory.txt
+          #   ansible-playbook -i inventory.txt configure-server.yml
           command: |
-            pwd &&
-            ls -la
-            cat inventory.txt
-            ansible-playbook -i inventory.txt configure-server.yml
+            cd backend
+            echo ENVIRONMENT=production > ".env"
+            echo TYPEORM_CONNECTION=postgres >> ".env"
+            echo TYPEORM_ENTITIES=./src/modules/domain/**/*.entity.ts >> ".env"
+            echo TYPEORM_MIGRATIONS=./src/migrations/*.ts >> ".env"
+            echo TYPEORM_MIGRATIONS_DIR=./src/migrations >> ".env"
+            echo NODE_ENV=production >> ".env"
+            echo TYPEORM_HOST=$TYPEORM_HOST >> ".env"
+            echo TYPEORM_PORT=$TYPEORM_PORT >> ".env"
+            echo TYPEORM_USERNAME=$TYPEORM_USERNAME >> ".env"
+            echo TYPEORM_PASSWORD=$TYPEORM_PASSWORD >> ".env"
+            echo TYPEORM_DATABASE=$TYPEORM_DATABASE >> ".env"
+            cd ..
+            export ANSIBLE_HOST_KEY_CHECKING=False
+            ansible-playbook \
+              -i .circleci/ansible/inventory.txt \
+              .circleci/ansible/configure-server.yml
 
       - destroy-environment:
           id: ${CIRCLE_WORKFLOW_ID:0:7}
