@@ -376,7 +376,7 @@ jobs:
       - add_ssh_keys:
           fingerprints: ["e4:47:c2:35:34:ae:45:70:01:03:94:e2:37:80:f6:9c"]
       - attach_workspace:
-          at: .
+          at: ~/
       - run:
           name: Install dependencies
           working_directory: /tmp
@@ -414,6 +414,7 @@ jobs:
             cd .circleci/ansible
             echo "Contents of the inventory.txt file is -----"
             cat inventory.txt
+            export ANSIBLE_HOST_KEY_CHECKING=False
             ansible-playbook -i inventory.txt deploy-backend.yml
       - destroy-environment:
           id: ${CIRCLE_WORKFLOW_ID:0:7}
@@ -456,14 +457,15 @@ jobs:
             else
             return 1
             fi
-            
+      - destroy-environment:
+          id: ${CIRCLE_WORKFLOW_ID:0:7}
+          when: on_fail
+
       - revert-migrations:
           id: ${CIRCLE_WORKFLOW_ID:0:7}
           when: on_fail
 
-      - destroy-environment:
-          id: ${CIRCLE_WORKFLOW_ID:0:7}
-          when: on_fail
+
 
   cloudfront-update:
     executor: aws
