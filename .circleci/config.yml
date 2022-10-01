@@ -522,7 +522,7 @@ jobs:
   #         environment:
   #           TERM: xterm-256color 
 
-    cleanup:
+  cleanup:
     docker:
       - image: amazon/aws-cli
     steps:
