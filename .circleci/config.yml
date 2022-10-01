@@ -331,82 +331,41 @@ jobs:
       #     when: on_success    
      
 
-  # deploy-frontend:
-  #   executor: node
-  #   steps:
-  #     - checkout
-  #     - attach_workspace:
-  #         at: .
-  #     - run:
-  #         name: Install AWS CLI dependencies
-  #         working_directory: /tmp
-  #         command: |
-  #           sudo apt-get update && sudo apt-get install -yy less
-  #           curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
-  #           unzip awscliv2.zip
-  #           sudo ./aws/install
-  #     - run:
-  #         name: Rebuild frontend with backend API Url
-  #         command: |
-  #           BACKEND_GET_IP=$(aws ec2 describe-instances \
-  #             --query 'Reservations[*].Instances[*].PublicDnsName' \
-  #             --filters "Name=tag:project,Values=udapeople-backend-${CIRCLE_WORKFLOW_ID:0:7}" \
-  #             --output text)
-  #           export API_URL="http://${BACKEND_GET_IP}:3030"
-  #           echo "${API_URL}"
-  #           echo API_URL=$API_URL >> "frontend/.env"
-  #           cd frontend
-  #           echo ENVIRONMENT=development  >> ".env" 
-  #           echo NODE_ENV=development >> ".env"
-  #           export ENVIRONMENT=development
-  #           export NODE_ENV=development
-  #           cat .env
-  #           npm i
-  #           npm run build   
-  #           cd dist
-  #           aws s3 sync . s3://udapeople-${CIRCLE_WORKFLOW_ID:0:7} --delete
-  #           echo "Done"
-  #     - destroy-environment:
-  #         id: ${CIRCLE_WORKFLOW_ID:0:7}
-  #         when: on_fail
-# new code
-#
   deploy-frontend:
-    docker:
-      - image: amazon/aws-cli
+    executor: node
     steps:
       - checkout
+      - attach_workspace:
+          at: .
       - run:
-          name: Install dependencies
+          name: Install AWS CLI dependencies
+          working_directory: /tmp
           command: |
-            # install tar utility
-            yum install -y tar gzip
-            # install nodejs on aws linux instance 
-            curl -sL https://rpm.nodesource.com/setup_lts.x | bash -
-            yum -y install nodejs
+            sudo apt-get update && sudo apt-get install -yy less
+            curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+            unzip awscliv2.zip
+            sudo ./aws/install
       - run:
-          name: Get backend url
+          name: Rebuild frontend with backend API Url
           command: |
-            export BACKEND_IP=$(aws ec2 describe-instances \
-            --query 'Reservations[*].Instances[*].PublicIpAddress' \
-            --filters "Name=tag:project,Values=udapeople-${CIRCLE_WORKFLOW_ID:0:7}" \
-            --output text)
-            export API_URL="http://${BACKEND_IP}:3030"
-            echo "API_URL = ${API_URL}"
-            echo API_URL="http://${BACKEND_IP}:3030" >> frontend/.env
-            cat frontend/.env
-      - persist_to_workspace:
-          root: ~/
-          paths:
-            - project/frontend/.env
-      - run:
-          name: Deploy frontend objects
-          command: |
+            BACKEND_GET_IP=$(aws ec2 describe-instances \
+              --query 'Reservations[*].Instances[*].PublicDnsName' \
+              --filters "Name=tag:project,Values=udapeople-backend-${CIRCLE_WORKFLOW_ID:0:7}" \
+              --output text)
+            export API_URL="http://${BACKEND_GET_IP}:3030"
+            echo "${API_URL}"
+            echo API_URL=$API_URL >> "frontend/.env"
             cd frontend
-            npm install
-            npm run build
-            tar -czvf artifact-"${CIRCLE_WORKFLOW_ID:0:7}".tar.gz dist
-            aws s3 cp dist s3://udapeople-${CIRCLE_WORKFLOW_ID:0:7} --recursive
+            echo ENVIRONMENT=development  >> ".env" 
+            echo NODE_ENV=development >> ".env"
+            export ENVIRONMENT=development
+            export NODE_ENV=development
+            cat .env
+            npm i
+            npm run build   
+            cd dist
+            aws s3 sync . s3://udapeople-${CIRCLE_WORKFLOW_ID:0:7} --delete
+            echo "Done"
       - destroy-environment:
           id: ${CIRCLE_WORKFLOW_ID:0:7}
           when: on_fail
