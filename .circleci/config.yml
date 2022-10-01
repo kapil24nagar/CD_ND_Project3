@@ -495,68 +495,34 @@ jobs:
           id: ${CIRCLE_WORKFLOW_ID:0:7}
           when: on_fail
 
-  # cleanup:
-  #   executor: aws
-  #   steps:
-  #     - checkout
-  #     - run:
-  #         name: Store old WorkflowID in memstash for cleanup phase
-  #         working_directory: ./.circleci/files
-  #         command: |
-  #           export OldWorkflowID=$(aws cloudformation \
-  #             list-exports --query "Exports[?Name=='ID'].Value" \
-  #             --no-paginate --output text)
-  #           export OldWorkflowIDLen=${#OldWorkflowID}
-  #           echo OldWorkflowID: "${OldWorkflowID}"
-  #           echo OldWorkflowIDLen: "${OldWorkflowIDLen}"
-  #           echo $OldWorkflowID
-  #           echo CircleCI: "${CIRCLE_WORKFLOW_ID:0:7}"
-  #           if [[ "${CIRCLE_WORKFLOW_ID:0:7}" == "${OldWorkflowID}" ]] || [[ "${OldWorkflowIDLen}" == 0 ]]
-  #           then 
-  #             echo " nothing to  cleanup"
-  #           else
-  #             echo Deletting : "$OldWorkflowID" 
-  #             aws s3 rm "s3://udapeople-${OldWorkflowID}" --recursive
-  #             aws cloudformation delete-stack --stack-name "udapeople-backend-${OldWorkflowID}"
-  #             aws cloudformation delete-stack --stack-name "udapeople-frontend-${OldWorkflowID}"
-  #             echo "Delete confirmed"
-  #           fi
-  #         environment:
-  #           TERM: xterm-256color 
-
-# new added
-
   cleanup:
-    docker:
-      - image: amazon/aws-cli
+    executor: aws
     steps:
       - checkout
       - run:
-          name: Get old stack workflow id, remove old stacks and files
+          name: Store old WorkflowID in memstash for cleanup phase
+          working_directory: ./.circleci/files
           command: |
-            echo CIRCLE_WORKFLOW_ID "${CIRCLE_WORKFLOW_ID:0:7}"
-            # Fetch the stack names          
-            export STACKS=($(aws cloudformation list-stacks --query "StackSummaries[*].StackName" \
-                    --stack-status-filter CREATE_COMPLETE --no-paginate --output text)) 
-            echo Stack names: "${STACKS[@]}"
-            # get list of all WorkflowIDs from backend stacks
-            BackendStacks=($(aws cloudformation describe-stacks --no-paginate --query \
-            'Stacks[?StackName!=`null`]|[?contains(StackName, `backend`) == `true`].StackName' --output text))
-            echo Backend stacks: "${BackendStacks[@]}"
-            for BackendStack in "${BackendStacks[@]}"
-            do
-              OldWorkflowID=${BackendStack: -7}
-              echo OldWorkflowID: "${OldWorkflowID}"
-              if [[ "${OldWorkflowID}" != "${CIRCLE_WORKFLOW_ID:0:7}" ]]
-              then
-                echo removing resources of OldWorkflowID: "${OldWorkflowID}"
-                aws s3 rb --force s3://udapeople-${OldWorkflowID}
-                aws cloudformation delete-stack --stack-name udapeople-backend-${OldWorkflowID}
-                aws cloudformation delete-stack --stack-name udapeople-frontend-${OldWorkflowID}
-              else
-                echo '----------------- no old resources found -----------------'
-              fi
-            done 
+            export OldWorkflowID=$(aws cloudformation \
+              list-exports --query "Exports[?Name=='ID'].Value" \
+              --no-paginate --output text)
+            export OldWorkflowIDLen=${#OldWorkflowID}
+            echo OldWorkflowID: "${OldWorkflowID}"
+            echo OldWorkflowIDLen: "${OldWorkflowIDLen}"
+            echo $OldWorkflowID
+            echo CircleCI: "${CIRCLE_WORKFLOW_ID:0:7}"
+            if [[ "${CIRCLE_WORKFLOW_ID:0:7}" == "${OldWorkflowID}" ]] || [[ "${OldWorkflowIDLen}" == 0 ]]
+            then 
+              echo "Cannothing to  cleanup"
+            else
+              echo "Delete confirmed"
+              aws s3 rm "s3://udapeople-${OldWorkflowID}" --recursive
+              aws cloudformation delete-stack --stack-name "udapeople-backend-${OldWorkflowID}"
+              aws cloudformation delete-stack --stack-name "udapeople-frontend-${OldWorkflowID}"
+            fi
+          environment:
+            TERM: xterm-256color 
+
 workflows:
   default:
     jobs:
