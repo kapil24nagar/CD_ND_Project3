@@ -79,4 +79,4 @@
         curl localhost:3030/api/status
         netstat -tulpn
         
-    ignore_errors: true
+    # ignore_errors: true
