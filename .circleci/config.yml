@@ -480,7 +480,7 @@ jobs:
           name: Update cloudfront distribution
           working_directory: ./.circleci/files
           command: |
-            aws cloudformation deploy \
+            aws cloudformation update-stack \
               --template-file cloudfront.yml \
               --stack-name InitialStack \
               --parameter-overrides WorkflowID="${CIRCLE_WORKFLOW_ID:0:7}" \
